@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"sudoku-solver/sudoku"
 )
 
@@ -22,6 +23,7 @@ func (c *RawCoordinate) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &s); err != nil {
 		return fmt.Errorf("coordinate should be a string, got %s", data)
 	}
+	s = strings.ToUpper(s)
 	// check that the coordinate matches the regex
 	if ok := coordinateRegex.MatchString(s); !ok {
 		return fmt.Errorf("%w: %s", errWrongFromat, s)
