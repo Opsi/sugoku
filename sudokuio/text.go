@@ -1,4 +1,4 @@
-package setup
+package sudokuio
 
 import (
 	"fmt"

@@ -2,9 +2,9 @@ package solve_test
 
 import (
 	"sudoku-solver/constraint"
-	"sudoku-solver/setup"
 	"sudoku-solver/solve"
 	"sudoku-solver/sudoku"
+	"sudoku-solver/sudokuio"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +37,7 @@ const testSolution = `
 
 func readTestSudoku(t *testing.T) sudoku.Sudoku {
 	t.Helper()
-	sud, err := setup.ParseString(testSudoku)
+	sud, err := sudokuio.ParseString(testSudoku)
 	if err != nil {
 		t.Fatalf("failed to parse test sudoku: %v", err)
 	}
@@ -47,7 +47,7 @@ func readTestSudoku(t *testing.T) sudoku.Sudoku {
 func readTestSolution(t *testing.T) sudoku.Solution {
 	t.Helper()
 	// we are cheeky and just parse the solution as a sudoku and read the fixed value constraints
-	sud, err := setup.ParseString(testSolution)
+	sud, err := sudokuio.ParseString(testSolution)
 	if err != nil {
 		t.Fatalf("failed to parse test solution: %v", err)
 	}

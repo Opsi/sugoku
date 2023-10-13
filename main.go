@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"sudoku-solver/setup"
 	"sudoku-solver/solve"
+	"sudoku-solver/sudokuio"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func run() error {
 	}
 
 	// parse the input file into a string
-	sudok, err := setup.ParseString(string(inputBytes))
+	sudok, err := sudokuio.ParseString(string(inputBytes))
 	if err != nil {
 		return fmt.Errorf("parse input file: %v", err)
 	}

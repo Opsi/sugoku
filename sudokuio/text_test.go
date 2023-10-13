@@ -1,7 +1,7 @@
-package setup_test
+package sudokuio_test
 
 import (
-	"sudoku-solver/setup"
+	"sudoku-solver/sudokuio"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ func TestParseText(t *testing.T) {
 	--- --- 6--
 	32- --- -19
 	`
-	sudoku, err := setup.ParseString(testSudoku)
+	sudoku, err := sudokuio.ParseString(testSudoku)
 	require.NoError(t, err)
 	assert.Equal(t, len(sudoku.Coordinates), 81)
 	assert.Equal(t, len(sudoku.PossibleValues), 9)
