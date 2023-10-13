@@ -42,7 +42,6 @@ func ParseString(input string) (*sudoku.Sudoku, error) {
 	if squareRoot != math.Floor(squareRoot) {
 		return nil, fmt.Errorf("amount of tokens %d is not a cube number", len(tokens))
 	}
-	boxLength := int(squareRoot)
 
 	possibleValues := make([]int, 0, sodokuLength)
 	for i := 1; i <= sodokuLength; i++ {
@@ -59,35 +58,33 @@ func ParseString(input string) (*sudoku.Sudoku, error) {
 	constraints := make([]sudoku.Constraint, 0)
 
 	// add row constraints
-	for x := 1; x <= sodokuLength; x++ {
-		rowConstraint, err := constraint.NewRowConstraint(x, coordinates)
-		if err != nil {
-			// this should never happen
-			panic(err)
-		}
+	rowConstraints, err := constraint.RowConstraints(coordinates)
+	if err != nil {
+		// this should never happen
+		panic(err)
+	}
+	for _, rowConstraint := range rowConstraints {
 		constraints = append(constraints, rowConstraint)
 	}
 
 	// add column constraints
-	for y := 1; y <= sodokuLength; y++ {
-		colConstraint, err := constraint.NewColumnConstraint(y, coordinates)
-		if err != nil {
-			// this should never happen
-			panic(err)
-		}
+	colConstraints, err := constraint.ColumnConstraints(coordinates)
+	if err != nil {
+		// this should never happen
+		panic(err)
+	}
+	for _, colConstraint := range colConstraints {
 		constraints = append(constraints, colConstraint)
 	}
 
 	// add box constraints
-	for x := 1; x <= sodokuLength; x += boxLength {
-		for y := 1; y <= sodokuLength; y += boxLength {
-			boxConstraint, err := constraint.NewSquareConstraint(x, y, boxLength, coordinates)
-			if err != nil {
-				// this should never happen
-				panic(err)
-			}
-			constraints = append(constraints, boxConstraint)
-		}
+	boxConstrains, err := constraint.BoxConstraints(coordinates)
+	if err != nil {
+		// this should never happen
+		panic(err)
+	}
+	for _, boxConstrain := range boxConstrains {
+		constraints = append(constraints, boxConstrain)
 	}
 
 	// add fixed value constraints

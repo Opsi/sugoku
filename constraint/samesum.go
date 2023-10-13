@@ -35,9 +35,9 @@ func (c SameSumConstraint) IsViolated(solution sudoku.Solution) bool {
 	return sum1 != sum2
 }
 
-// NewArrowConstrain creates a new SameSumConstraint that requires that the sum
+// NewArrowConstraint creates a new SameSumConstraint that requires that the sum
 // of the values at the coordinates in path is the same as the value at circle.
-func NewArrowConstrain(circle sudoku.Coordinate, path []sudoku.Coordinate) (*SameSumConstraint, error) {
+func NewArrowConstraint(circle sudoku.Coordinate, path []sudoku.Coordinate) (*SameSumConstraint, error) {
 	if len(path) == 0 {
 		return nil, fmt.Errorf("arrow path must not be empty")
 	}
