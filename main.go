@@ -2,13 +2,51 @@ package main
 
 import (
 	"fmt"
-	"sudoku-solver/sudoku"
+	"os"
+	"sudoku-solver/setup"
+	"sudoku-solver/solve"
 )
 
-func ParseSudoku(input string) (sudoku.Sudoku, error) {
-	return sudoku.Sudoku{}, fmt.Errorf("not implemented")
+func main() {
+	if err := run(); err != nil {
+		panic(err)
+	}
 }
 
-func main() {
+func run() error {
+	// first argument is the input file
+	if len(os.Args) < 2 {
+		return fmt.Errorf("no input file specified")
+	}
+	inputFilePath := os.Args[1]
 
+	// read the input file
+	inputBytes, err := os.ReadFile(inputFilePath)
+	if err != nil {
+		return fmt.Errorf("read input file: %v", err)
+	}
+
+	// parse the input file into a string
+	sudok, err := setup.ParseString(string(inputBytes))
+	if err != nil {
+		return fmt.Errorf("parse input file: %v", err)
+	}
+
+	// solve the sudoku
+	solution, err := solve.Solve(*sudok)
+	if err != nil {
+		return fmt.Errorf("solve sudoku: %v", err)
+	}
+
+	// print the solution
+	lastRow := -9999
+	for _, coor := range sudok.Coordinates {
+		value := solution[coor]
+		if lastRow != coor.Row {
+			fmt.Println()
+			lastRow = coor.Row
+		}
+		fmt.Printf("%d", value)
+	}
+	return nil
 }

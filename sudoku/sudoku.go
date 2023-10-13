@@ -1,21 +1,11 @@
 package sudoku
 
-import "fmt"
-
 type Coordinate struct {
 	Row, Col int
 }
 
-type ConstraintResult uint8
-
-const (
-	ConstraintResultValidAndSolved = 1 + iota
-	ConstraintResultValidAndNotSolved
-	ConstraintResultInvalid
-)
-
 type Constraint interface {
-	Check(Solution) ConstraintResult
+	IsViolated(Solution) bool
 }
 
 type Sudoku struct {
@@ -24,8 +14,27 @@ type Sudoku struct {
 	Constraints    []Constraint
 }
 
+var _ Constraint = Sudoku{}
+
 type Solution = map[Coordinate]int
 
-func (s Sudoku) Solve() (Solution, error) {
-	return Solution{}, fmt.Errorf("not implemented")
+func (s Sudoku) IsViolated(solution Solution) bool {
+	for _, constraint := range s.Constraints {
+		if constraint.IsViolated(solution) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s Sudoku) IsSolved(solution Solution) bool {
+	if s.IsViolated(solution) {
+		return false
+	}
+	for _, coordinate := range s.Coordinates {
+		if _, ok := solution[coordinate]; !ok {
+			return false
+		}
+	}
+	return true
 }

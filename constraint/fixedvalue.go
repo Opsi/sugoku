@@ -9,13 +9,10 @@ type FixedValueConstraint struct {
 
 var _ sudoku.Constraint = FixedValueConstraint{}
 
-func (c FixedValueConstraint) Check(solution sudoku.Solution) sudoku.ConstraintResult {
+func (c FixedValueConstraint) IsViolated(solution sudoku.Solution) bool {
 	value, ok := solution[c.Coordinate]
 	if !ok {
-		return sudoku.ConstraintResultValidAndNotSolved
+		return false
 	}
-	if value != c.Value {
-		return sudoku.ConstraintResultInvalid
-	}
-	return sudoku.ConstraintResultValidAndSolved
+	return value != c.Value
 }

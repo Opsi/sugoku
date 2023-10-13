@@ -11,19 +11,19 @@ type NoRepeatConstraint struct {
 
 var _ sudoku.Constraint = NoRepeatConstraint{}
 
-func (c NoRepeatConstraint) Check(solution sudoku.Solution) sudoku.ConstraintResult {
+func (c NoRepeatConstraint) IsViolated(solution sudoku.Solution) bool {
 	seen := make(map[int]struct{})
 	for _, cell := range c.Coordinates {
 		value, ok := solution[cell]
 		if !ok {
-			return sudoku.ConstraintResultValidAndNotSolved
+			continue
 		}
 		if _, ok := seen[value]; ok {
-			return sudoku.ConstraintResultInvalid
+			return true
 		}
 		seen[value] = struct{}{}
 	}
-	return sudoku.ConstraintResultValidAndSolved
+	return false
 }
 
 func NewRowConstraint(row int, coordinates []sudoku.Coordinate) (NoRepeatConstraint, error) {
