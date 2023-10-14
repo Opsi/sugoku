@@ -5,10 +5,7 @@ import (
 	"sudoku-solver/sudoku"
 )
 
-var (
-	errInvalidSolution = fmt.Errorf("invalid solution")
-	errNoSolutionFound = fmt.Errorf("no solution found")
-)
+var errInvalidSolution = fmt.Errorf("invalid solution")
 
 type solver struct {
 	sudok           sudoku.Sudoku
@@ -38,37 +35,33 @@ func Solve(sudok sudoku.Sudoku) (sudoku.Solution, error) {
 		coordinateOrder: sudok.Coordinates,
 		deepest:         0,
 	}
-	err := s.solve(0)
-	if err != nil {
-		return nil, err
+	success := s.solve(0)
+	if !success {
+		return nil, errInvalidSolution
 	}
 	return s.state, nil
 }
 
-func (s *solver) solve(coorIndex int) error {
+func (s *solver) solve(coorIndex int) bool {
 	if coorIndex > s.deepest {
 		s.deepest = coorIndex
 		fmt.Println("deepest:", s.deepest)
 	}
 	if coorIndex >= len(s.coordinateOrder) {
 		// we have filled in all coordinates and just need to check if the solution is valid
-		isSolved := s.sudok.IsSolved(s.state)
-		if !isSolved {
-			return errInvalidSolution
-		}
-		return nil
+		return s.sudok.IsSolved(s.state)
 	}
 	coordinate := s.coordinateOrder[coorIndex]
-	coorState, ok := s.state[coordinate]
+	coordState, ok := s.state[coordinate]
 	if !ok {
 		// this should never happen
 		panic(fmt.Sprintf("coordinate %v not found in state", coordinate))
 	}
-	if coorState.HasValue {
+	if coordState.HasValue {
 		// this coordinate is fixed, so we don't need to try any values
 		return s.solve(coorIndex + 1)
 	}
-	currentPossibilities := coorState.Possibilities
+	currentPossibilities := coordState.Possibilities
 	for _, value := range currentPossibilities {
 		// try to fill in the coordinate with the value
 		s.state[coordinate] = coordinateState{
@@ -80,12 +73,12 @@ func (s *solver) solve(coorIndex int) error {
 		if isViolated {
 			continue
 		}
-		err := s.solve(coorIndex + 1)
-		if err != nil {
+		success := s.solve(coorIndex + 1)
+		if !success {
 			continue
 		}
 		// we found a solution
-		return nil
+		return true
 	}
 	// no possible value created a solution
 	s.state[coordinate] = coordinateState{
@@ -93,7 +86,7 @@ func (s *solver) solve(coorIndex int) error {
 		Value:         0,
 		Possibilities: currentPossibilities,
 	}
-	return errNoSolutionFound
+	return false
 }
 
 type Result uint8

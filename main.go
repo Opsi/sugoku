@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sudoku-solver/solve"
+	"sudoku-solver/sudoku"
 	"sudoku-solver/sudokuio"
 )
 
@@ -26,10 +28,21 @@ func run() error {
 		return fmt.Errorf("read input file: %v", err)
 	}
 
-	// parse the input file into a string
-	sudok, err := sudokuio.ParseString(string(inputBytes))
-	if err != nil {
-		return fmt.Errorf("parse input file: %v", err)
+	var sudok *sudoku.Sudoku
+	if strings.HasSuffix(inputFilePath, ".txt") {
+		// parse the input file into a string
+		sudok, err = sudokuio.ParseString(string(inputBytes))
+		if err != nil {
+			return fmt.Errorf("parse txt file: %v", err)
+		}
+	} else if strings.HasSuffix(inputFilePath, ".json") {
+		// parse the input file as JSON
+		sudok, err = sudokuio.ParseJSON(inputBytes)
+		if err != nil {
+			return fmt.Errorf("parse json file: %v", err)
+		}
+	} else {
+		return fmt.Errorf("unknown input file type")
 	}
 
 	// solve the sudoku

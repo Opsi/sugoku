@@ -16,7 +16,7 @@ type Coordinate struct {
 }
 
 func (c Coordinate) String() string {
-	return fmt.Sprintf("%d-%d", c.Row, c.Col)
+	return fmt.Sprintf("R%d-C%d", c.Row, c.Col)
 }
 
 func ParseCoordinateString(s string) (Coordinate, error) {
