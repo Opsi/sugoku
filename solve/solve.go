@@ -15,8 +15,7 @@ var (
 
 type solver struct {
 	sudok           sudoku.Sudoku
-	solution        sudoku.Solution
-	fixedValues     map[sudoku.Coordinate]struct{}
+	state           state
 	coordinateOrder []sudoku.Coordinate
 	deepest         int
 }
@@ -114,24 +113,15 @@ func Solve(sudok sudoku.Sudoku) (sudoku.Solution, error) {
 	coordinateOrder := CreateCoordinateOrder(sudok)
 	s := solver{
 		sudok:           sudok,
-		solution:        make(sudoku.Solution, len(sudok.Coordinates)),
-		fixedValues:     make(map[sudoku.Coordinate]struct{}),
+		state:           initState(sudok),
 		coordinateOrder: coordinateOrder,
 		deepest:         0,
-	}
-	for _, constr := range sudok.Constraints {
-		fvc, ok := constr.(constraint.FixedValueConstraint)
-		if !ok {
-			continue
-		}
-		s.solution[fvc.Coordinate] = fvc.Value
-		s.fixedValues[fvc.Coordinate] = struct{}{}
 	}
 	err := s.solve(0)
 	if err != nil {
 		return nil, err
 	}
-	return s.solution, nil
+	return s.state.Solution(), nil
 }
 
 func (s *solver) solve(coorIndex int) error {
@@ -141,21 +131,31 @@ func (s *solver) solve(coorIndex int) error {
 	}
 	if coorIndex >= len(s.coordinateOrder) {
 		// we have filled in all coordinates and just need to check if the solution is valid
-		isSolved := s.sudok.IsSolved(s.solution)
+		isSolved := s.sudok.IsSolved(s.state.Solution())
 		if !isSolved {
 			return errInvalidSolution
 		}
 		return nil
 	}
 	coordinate := s.coordinateOrder[coorIndex]
-	if _, ok := s.fixedValues[coordinate]; ok {
+	coorState, ok := s.state[coordinate]
+	if !ok {
+		// this should never happen
+		panic(fmt.Sprintf("coordinate %v not found in state", coordinate))
+	}
+	if coorState.HasValue {
 		// this coordinate is fixed, so we don't need to try any values
 		return s.solve(coorIndex + 1)
 	}
-	for _, value := range s.sudok.PossibleValues {
+	currentPossibilities := coorState.Possibilities
+	for _, value := range currentPossibilities {
 		// try to fill in the coordinate with the value
-		s.solution[coordinate] = value
-		isViolated := s.sudok.IsViolated(s.solution)
+		s.state[coordinate] = coordinateState{
+			HasValue:      true,
+			Value:         value,
+			Possibilities: nil,
+		}
+		isViolated := s.sudok.IsViolated(s.state.Solution())
 		if isViolated {
 			continue
 		}
@@ -167,7 +167,11 @@ func (s *solver) solve(coorIndex int) error {
 		return nil
 	}
 	// no possible value created a solution
-	delete(s.solution, coordinate)
+	s.state[coordinate] = coordinateState{
+		HasValue:      false,
+		Value:         0,
+		Possibilities: currentPossibilities,
+	}
 	return errNoSolutionFound
 }
 
