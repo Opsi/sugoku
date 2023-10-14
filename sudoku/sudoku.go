@@ -2,14 +2,6 @@ package sudoku
 
 import "fmt"
 
-type Coordinate struct {
-	Row, Col int
-}
-
-func (c Coordinate) String() string {
-	return fmt.Sprintf("%d-%d", c.Row, c.Col)
-}
-
 type Constraint interface {
 	IsViolated(Solution) bool
 }

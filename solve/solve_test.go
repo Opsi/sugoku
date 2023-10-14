@@ -11,22 +11,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func readSudokuStr(t *testing.T, s string) sudoku.Sudoku {
-	t.Helper()
+func readSudokuStr(t require.TestingT, s string) sudoku.Sudoku {
 	sud, err := sudokuio.ParseString(s)
-	if err != nil {
-		t.Fatalf("failed to parse test sudoku: %v", err)
-	}
+	require.NoError(t, err)
 	return *sud
 }
 
-func readSolutionStr(t *testing.T, s string) sudoku.Solution {
-	t.Helper()
+func readSolutionStr(t require.TestingT, s string) sudoku.Solution {
 	// we are cheeky and just parse the solution as a sudoku and read the fixed value constraints
 	sud, err := sudokuio.ParseString(s)
-	if err != nil {
-		t.Fatalf("failed to parse test solution: %v", err)
-	}
+	require.NoError(t, err)
 	solution := make(sudoku.Solution)
 	for _, constr := range sud.Constraints {
 		fvc, ok := constr.(constraint.FixedValueConstraint)
@@ -38,7 +32,7 @@ func readSolutionStr(t *testing.T, s string) sudoku.Solution {
 	return solution
 }
 
-func TestSolve(t *testing.T) {
+func createSimpleSudoku(t require.TestingT) (sudoku.Sudoku, sudoku.Solution) {
 	const sudokuStr = `
 		24- --- -86
 		--3 --- ---
@@ -64,6 +58,11 @@ func TestSolve(t *testing.T) {
 	sudok := readSudokuStr(t, sudokuStr)
 	solution := readSolutionStr(t, solutionStr)
 	require.NoError(t, sudok.Check(solution))
+	return sudok, solution
+}
+
+func TestSolveSimple(t *testing.T) {
+	sudok, solution := createSimpleSudoku(t)
 	solved, err := solve.Solve(sudok)
 	require.NoError(t, err)
 	require.NoError(t, sudok.Check(solved))
@@ -74,7 +73,15 @@ func TestSolve(t *testing.T) {
 	}
 }
 
-func TestArrowSudoku(t *testing.T) {
+func BenchmarkSolveSimple(b *testing.B) {
+	sudok, _ := createSimpleSudoku(b)
+	for i := 0; i < b.N; i++ {
+		_, err := solve.Solve(sudok)
+		require.NoError(b, err)
+	}
+}
+
+func createArrowSudoku(t require.TestingT) (sudoku.Sudoku, sudoku.Solution) {
 	const sudokuStr = `
 	7-- -4- --3
 	--- --- ---
@@ -112,11 +119,9 @@ func TestArrowSudoku(t *testing.T) {
 	for _, arrowStrSlice := range arrowStrSlices {
 		coords := make([]sudoku.Coordinate, 0, len(arrowStrSlice))
 		for _, coordStr := range arrowStrSlice {
-			jsonStr := []byte(`"` + coordStr + `"`)
-			var rawCoord sudokuio.RawCoordinate
-			err := rawCoord.UnmarshalJSON(jsonStr)
+			coord, err := sudoku.ParseCoordinateString(coordStr)
 			require.NoError(t, err)
-			coords = append(coords, sudoku.Coordinate(rawCoord))
+			coords = append(coords, coord)
 		}
 		arrowConstraint, err := constraint.NewArrowConstraint(coords[0], coords[1:])
 		require.NoError(t, err)
@@ -125,6 +130,11 @@ func TestArrowSudoku(t *testing.T) {
 
 	solution := readSolutionStr(t, solutionStr)
 	require.NoError(t, sudok.Check(solution))
+	return sudok, solution
+}
+
+func TestSolveArrowSudoku(t *testing.T) {
+	sudok, solution := createArrowSudoku(t)
 	solved, err := solve.Solve(sudok)
 	require.NoError(t, err)
 	require.NoError(t, sudok.Check(solved))
@@ -132,5 +142,13 @@ func TestArrowSudoku(t *testing.T) {
 		solvedValue, ok := solved[solutionCoordinate]
 		require.True(t, ok)
 		assert.Equal(t, solutionValue, solvedValue)
+	}
+}
+
+func BenchmarkSolveArrowSudoku(b *testing.B) {
+	sudok, _ := createArrowSudoku(b)
+	for i := 0; i < b.N; i++ {
+		_, err := solve.Solve(sudok)
+		require.NoError(b, err)
 	}
 }

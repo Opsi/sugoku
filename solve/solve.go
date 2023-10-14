@@ -9,8 +9,6 @@ import (
 var (
 	errInvalidSolution = fmt.Errorf("invalid solution")
 	errNoSolutionFound = fmt.Errorf("no solution found")
-
-	biggestLevel = 0
 )
 
 type solver struct {
@@ -55,10 +53,6 @@ func Solve(sudok sudoku.Sudoku) (sudoku.Solution, error) {
 }
 
 func (s solver) solve(coorIndex int) error {
-	if coorIndex > biggestLevel {
-		biggestLevel = coorIndex
-		fmt.Printf("biggest level: %d\n", biggestLevel)
-	}
 	if coorIndex >= len(s.sudok.Coordinates) {
 		// we have filled in all coordinates and just need to check if the solution is valid
 		isSolved := s.sudok.IsSolved(s.solution)
