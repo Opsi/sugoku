@@ -16,3 +16,7 @@ func (c FixedValueConstraint) IsViolated(solution sudoku.Solution) bool {
 	}
 	return value != c.Value
 }
+
+func (c FixedValueConstraint) ConstrainedCoordinates() []sudoku.Coordinate {
+	return []sudoku.Coordinate{c.Coordinate}
+}

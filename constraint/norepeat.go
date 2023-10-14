@@ -27,6 +27,10 @@ func (c NoRepeatConstraint) IsViolated(solution sudoku.Solution) bool {
 	return false
 }
 
+func (c NoRepeatConstraint) ConstrainedCoordinates() []sudoku.Coordinate {
+	return c.Coordinates
+}
+
 func RowConstraint(row int, coordinates []sudoku.Coordinate) (*NoRepeatConstraint, error) {
 	rowCoords := make([]sudoku.Coordinate, 0)
 	for _, coordinate := range coordinates {

@@ -4,6 +4,7 @@ import "fmt"
 
 type Constraint interface {
 	IsViolated(Solution) bool
+	ConstrainedCoordinates() []Coordinate
 }
 
 type Sudoku struct {
@@ -11,8 +12,6 @@ type Sudoku struct {
 	PossibleValues []int
 	Constraints    []Constraint
 }
-
-var _ Constraint = Sudoku{}
 
 type Solution = map[Coordinate]int
 

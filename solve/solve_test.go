@@ -152,3 +152,69 @@ func BenchmarkSolveArrowSudoku(b *testing.B) {
 		require.NoError(b, err)
 	}
 }
+
+func TestSortKeysByValueEmptyMap(t *testing.T) {
+	m := map[sudoku.Coordinate]int{}
+	sorted := solve.SortByConstraintCount(m)
+	assert.Equal(t, 0, len(sorted))
+}
+
+func TestSortKeysByValueSingleElementMap(t *testing.T) {
+	m := map[sudoku.Coordinate]int{
+		{Row: 1, Col: 2}: 3,
+	}
+	sorted := solve.SortByConstraintCount(m)
+	assert.Equal(t, []sudoku.Coordinate{{Row: 1, Col: 2}}, sorted)
+}
+
+func TestSortKeysByValueDuplicateValues(t *testing.T) {
+	m := map[sudoku.Coordinate]int{
+		{Row: 1, Col: 1}: 3,
+		{Row: 1, Col: 2}: 1,
+		{Row: 2, Col: 1}: 2,
+		{Row: 2, Col: 2}: 1,
+	}
+	sorted := solve.SortByConstraintCount(m)
+	assert.Equal(t, []sudoku.Coordinate{
+		{Row: 1, Col: 1},
+		{Row: 2, Col: 1},
+		{Row: 1, Col: 2},
+		{Row: 2, Col: 2},
+	}, sorted)
+}
+func TestCreateCoordinateOrder(t *testing.T) {
+	sudokuStr := `
+		--- --- ---
+		--- --- ---
+		--- --- ---
+		--- --- ---
+		--- -3- ---
+		--- --- ---
+		--- --- ---
+		--- --- ---
+		--- --- ---`
+	sudok := readSudokuStr(t, sudokuStr)
+	coorOrder := solve.CreateCoordinateOrder(sudok)
+	assert.Equal(t, 81, len(coorOrder))
+	assert.Equal(t, sudoku.Coordinate{Row: 5, Col: 5}, coorOrder[0])
+}
+
+func TestCreateCoordinateOrderEmptySudoku(t *testing.T) {
+	sudok := sudoku.Sudoku{}
+	coorOrder := solve.CreateCoordinateOrder(sudok)
+	assert.Equal(t, 0, len(coorOrder))
+}
+
+func TestCreateCoordinateOrderSingleCellSudoku(t *testing.T) {
+	sudok := sudoku.Sudoku{
+		Coordinates: []sudoku.Coordinate{{Row: 1, Col: 1}},
+		Constraints: []sudoku.Constraint{
+			constraint.FixedValueConstraint{
+				Coordinate: sudoku.Coordinate{Row: 1, Col: 1},
+				Value:      1,
+			},
+		},
+	}
+	coorOrder := solve.CreateCoordinateOrder(sudok)
+	assert.Equal(t, 1, len(coorOrder))
+}

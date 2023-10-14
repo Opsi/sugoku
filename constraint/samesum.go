@@ -35,6 +35,10 @@ func (c SameSumConstraint) IsViolated(solution sudoku.Solution) bool {
 	return sum1 != sum2
 }
 
+func (c SameSumConstraint) ConstrainedCoordinates() []sudoku.Coordinate {
+	return append(c.Coordinates1, c.Coordinates2...)
+}
+
 // NewArrowConstraint creates a new SameSumConstraint that requires that the sum
 // of the values at the coordinates in path is the same as the value at circle.
 func NewArrowConstraint(circle sudoku.Coordinate, path []sudoku.Coordinate) (*SameSumConstraint, error) {
