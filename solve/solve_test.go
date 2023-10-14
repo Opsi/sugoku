@@ -21,15 +21,15 @@ func readSolutionStr(t require.TestingT, s string) sudoku.Solution {
 	// we are cheeky and just parse the solution as a sudoku and read the fixed value constraints
 	sud, err := sudokuio.ParseString(s)
 	require.NoError(t, err)
-	solution := make(sudoku.Solution)
+	asMap := make(map[sudoku.Coordinate]int, len(sud.Coordinates))
 	for _, constr := range sud.Constraints {
 		fvc, ok := constr.(constraint.FixedValueConstraint)
 		if !ok {
 			continue
 		}
-		solution[fvc.Coordinate] = fvc.Value
+		asMap[fvc.Coordinate] = fvc.Value
 	}
-	return solution
+	return sudoku.MapSolution(asMap)
 }
 
 func createSimpleSudoku(t require.TestingT) (sudoku.Sudoku, sudoku.Solution) {
@@ -66,8 +66,10 @@ func TestSolveSimple(t *testing.T) {
 	solved, err := solve.Solve(sudok)
 	require.NoError(t, err)
 	require.NoError(t, sudok.Check(solved))
-	for solutionCoordinate, solutionValue := range solution {
-		solvedValue, ok := solved[solutionCoordinate]
+	for _, coord := range sudok.Coordinates {
+		solutionValue, ok := solution.Get(coord)
+		require.True(t, ok)
+		solvedValue, ok := solved.Get(coord)
 		require.True(t, ok)
 		assert.Equal(t, solutionValue, solvedValue)
 	}
@@ -138,8 +140,10 @@ func TestSolveArrowSudoku(t *testing.T) {
 	solved, err := solve.Solve(sudok)
 	require.NoError(t, err)
 	require.NoError(t, sudok.Check(solved))
-	for solutionCoordinate, solutionValue := range solution {
-		solvedValue, ok := solved[solutionCoordinate]
+	for _, coord := range sudok.Coordinates {
+		solutionValue, ok := solution.Get(coord)
+		require.True(t, ok)
+		solvedValue, ok := solved.Get(coord)
 		require.True(t, ok)
 		assert.Equal(t, solutionValue, solvedValue)
 	}
@@ -151,70 +155,4 @@ func BenchmarkSolveArrowSudoku(b *testing.B) {
 		_, err := solve.Solve(sudok)
 		require.NoError(b, err)
 	}
-}
-
-func TestSortKeysByValueEmptyMap(t *testing.T) {
-	m := map[sudoku.Coordinate]int{}
-	sorted := solve.SortByConstraintCount(m)
-	assert.Equal(t, 0, len(sorted))
-}
-
-func TestSortKeysByValueSingleElementMap(t *testing.T) {
-	m := map[sudoku.Coordinate]int{
-		{Row: 1, Col: 2}: 3,
-	}
-	sorted := solve.SortByConstraintCount(m)
-	assert.Equal(t, []sudoku.Coordinate{{Row: 1, Col: 2}}, sorted)
-}
-
-func TestSortKeysByValueDuplicateValues(t *testing.T) {
-	m := map[sudoku.Coordinate]int{
-		{Row: 1, Col: 1}: 3,
-		{Row: 1, Col: 2}: 1,
-		{Row: 2, Col: 1}: 2,
-		{Row: 2, Col: 2}: 1,
-	}
-	sorted := solve.SortByConstraintCount(m)
-	assert.Equal(t, []sudoku.Coordinate{
-		{Row: 1, Col: 1},
-		{Row: 2, Col: 1},
-		{Row: 1, Col: 2},
-		{Row: 2, Col: 2},
-	}, sorted)
-}
-func TestCreateCoordinateOrder(t *testing.T) {
-	sudokuStr := `
-		--- --- ---
-		--- --- ---
-		--- --- ---
-		--- --- ---
-		--- -3- ---
-		--- --- ---
-		--- --- ---
-		--- --- ---
-		--- --- ---`
-	sudok := readSudokuStr(t, sudokuStr)
-	coorOrder := solve.CreateCoordinateOrder(sudok)
-	assert.Equal(t, 81, len(coorOrder))
-	assert.Equal(t, sudoku.Coordinate{Row: 5, Col: 5}, coorOrder[0])
-}
-
-func TestCreateCoordinateOrderEmptySudoku(t *testing.T) {
-	sudok := sudoku.Sudoku{}
-	coorOrder := solve.CreateCoordinateOrder(sudok)
-	assert.Equal(t, 0, len(coorOrder))
-}
-
-func TestCreateCoordinateOrderSingleCellSudoku(t *testing.T) {
-	sudok := sudoku.Sudoku{
-		Coordinates: []sudoku.Coordinate{{Row: 1, Col: 1}},
-		Constraints: []sudoku.Constraint{
-			constraint.FixedValueConstraint{
-				Coordinate: sudoku.Coordinate{Row: 1, Col: 1},
-				Value:      1,
-			},
-		},
-	}
-	coorOrder := solve.CreateCoordinateOrder(sudok)
-	assert.Equal(t, 1, len(coorOrder))
 }

@@ -14,8 +14,8 @@ var _ sudoku.Constraint = NoRepeatConstraint{}
 
 func (c NoRepeatConstraint) IsViolated(solution sudoku.Solution) bool {
 	seen := make(map[int]struct{})
-	for _, cell := range c.Coordinates {
-		value, ok := solution[cell]
+	for _, coord := range c.Coordinates {
+		value, ok := solution.Get(coord)
 		if !ok {
 			continue
 		}

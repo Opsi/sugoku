@@ -13,6 +13,19 @@ type coordinateState struct {
 
 type state map[sudoku.Coordinate]coordinateState
 
+var _ sudoku.Solution = state{}
+
+func (s state) Get(coordinate sudoku.Coordinate) (int, bool) {
+	coorState, ok := s[coordinate]
+	if !ok {
+		return 0, false
+	}
+	if !coorState.HasValue {
+		return 0, false
+	}
+	return coorState.Value, true
+}
+
 func initState(sudok sudoku.Sudoku) state {
 	m := make(map[sudoku.Coordinate]coordinateState, len(sudok.Coordinates))
 	for _, coor := range sudok.Coordinates {
@@ -69,14 +82,4 @@ func initState(sudok sudoku.Sudoku) state {
 	}
 
 	return m
-}
-
-func (s state) Solution() sudoku.Solution {
-	solution := make(sudoku.Solution, len(s))
-	for coor, coorState := range s {
-		if coorState.HasValue {
-			solution[coor] = coorState.Value
-		}
-	}
-	return solution
 }

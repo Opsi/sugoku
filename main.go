@@ -40,11 +40,14 @@ func run() error {
 
 	// print the solution
 	lastRow := -9999
-	for _, coor := range sudok.Coordinates {
-		value := solution[coor]
-		if lastRow != coor.Row {
+	for _, coord := range sudok.Coordinates {
+		value, ok := solution.Get(coord)
+		if !ok {
+			return fmt.Errorf("solution missing value for coordinate %v", coord)
+		}
+		if lastRow != coord.Row {
 			fmt.Println()
-			lastRow = coor.Row
+			lastRow = coord.Row
 		}
 		fmt.Printf("%d", value)
 	}

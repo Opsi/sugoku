@@ -10,7 +10,7 @@ type FixedValueConstraint struct {
 var _ sudoku.Constraint = FixedValueConstraint{}
 
 func (c FixedValueConstraint) IsViolated(solution sudoku.Solution) bool {
-	value, ok := solution[c.Coordinate]
+	value, ok := solution.Get(c.Coordinate)
 	if !ok {
 		return false
 	}

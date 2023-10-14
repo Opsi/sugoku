@@ -13,7 +13,20 @@ type Sudoku struct {
 	Constraints    []Constraint
 }
 
-type Solution = map[Coordinate]int
+type Solution interface {
+	Get(Coordinate) (int, bool)
+}
+
+type solution map[Coordinate]int
+
+func (s solution) Get(coordinate Coordinate) (int, bool) {
+	value, ok := s[coordinate]
+	return value, ok
+}
+
+func MapSolution(m map[Coordinate]int) Solution {
+	return solution(m)
+}
 
 func (s Sudoku) IsViolated(solution Solution) bool {
 	for _, constraint := range s.Constraints {
@@ -29,7 +42,7 @@ func (s Sudoku) IsSolved(solution Solution) bool {
 		return false
 	}
 	for _, coordinate := range s.Coordinates {
-		if _, ok := solution[coordinate]; !ok {
+		if _, ok := solution.Get(coordinate); !ok {
 			return false
 		}
 	}
@@ -43,7 +56,7 @@ func (s Sudoku) Check(solution Solution) error {
 		}
 	}
 	for _, coordinate := range s.Coordinates {
-		if _, ok := solution[coordinate]; !ok {
+		if _, ok := solution.Get(coordinate); !ok {
 			return fmt.Errorf("solution is missing coordinate %v", coordinate)
 		}
 	}

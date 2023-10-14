@@ -17,16 +17,16 @@ var _ sudoku.Constraint = SameSumConstraint{}
 
 func (c SameSumConstraint) IsViolated(solution sudoku.Solution) bool {
 	sum1 := 0
-	for _, coor := range c.Coordinates1 {
-		value, ok := solution[coor]
+	for _, coord := range c.Coordinates1 {
+		value, ok := solution.Get(coord)
 		if !ok {
 			return false
 		}
 		sum1 += value
 	}
 	sum2 := 0
-	for _, coor := range c.Coordinates2 {
-		value, ok := solution[coor]
+	for _, coord := range c.Coordinates2 {
+		value, ok := solution.Get(coord)
 		if !ok {
 			return false
 		}
