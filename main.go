@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log/slog"
 	"math"
@@ -16,22 +17,31 @@ import (
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Println(err.Error())
+		slog.Error(err.Error())
 		os.Exit(1)
 	}
 }
 
 func run() error {
+	modeString := flag.String("mode", "pencilmark", "mode to use for solving")
+	flag.Parse()
+
+	args := flag.Args()
 	// first argument is the input file
-	if len(os.Args) < 2 {
+	if len(args) < 1 {
 		return fmt.Errorf("no input file specified")
 	}
-	inputFilePath := os.Args[1]
+	inputFilePath := args[0]
+
+	mode, err := backtrack.ParseMode(*modeString)
+	if err != nil {
+		return fmt.Errorf("parse mode: %w", err)
+	}
 
 	// read the input file
 	inputBytes, err := os.ReadFile(inputFilePath)
 	if err != nil {
-		return fmt.Errorf("read input file: %v", err)
+		return fmt.Errorf("read input file: %w", err)
 	}
 
 	var sudok *sudoku.Sudoku
@@ -39,13 +49,13 @@ func run() error {
 		// parse the input file into a string
 		sudok, err = sudokuio.ParseString(string(inputBytes))
 		if err != nil {
-			return fmt.Errorf("parse txt file: %v", err)
+			return fmt.Errorf("parse txt file: %w", err)
 		}
 	} else if strings.HasSuffix(inputFilePath, ".json") {
 		// parse the input file as JSON
 		sudok, err = sudokuio.ParseJSON(inputBytes)
 		if err != nil {
-			return fmt.Errorf("parse json file: %v", err)
+			return fmt.Errorf("parse json file: %w", err)
 		}
 	} else {
 		return fmt.Errorf("unknown input file type")
@@ -55,8 +65,9 @@ func run() error {
 	defer cancel()
 
 	// solve the sudoku
+	slog.Info("starting to solve", slog.String("mode", mode.String()))
 	start := time.Now()
-	solutions := backtrack.FindSolutions(ctx, backtrack.ModePencilMark, *sudok)
+	solutions := backtrack.FindSolutions(ctx, mode, *sudok)
 	ticker := time.NewTicker(30 * time.Second)
 	solutionCount := 0
 
