@@ -7,26 +7,20 @@ import (
 	"sudoku-solver/sudoku"
 )
 
-type coordinateState struct {
-	HasValue      bool
-	Value         int
-	Possibilities []int
-}
-
 type simpleCandidate struct {
 	sudok           sudoku.Sudoku
 	coordinateOrder []sudoku.Coordinate
 
 	coordinateIndex int
-	state           map[sudoku.Coordinate]coordinateState
+	state           map[sudoku.Coordinate]cellState
 }
 
 var _ Candidate = (*simpleCandidate)(nil)
 
 func rootSimple(sudok sudoku.Sudoku) Candidate {
-	m := make(map[sudoku.Coordinate]coordinateState, len(sudok.Coordinates))
+	m := make(map[sudoku.Coordinate]cellState, len(sudok.Coordinates))
 	for _, coor := range sudok.Coordinates {
-		m[coor] = coordinateState{
+		m[coor] = cellState{
 			HasValue:      false,
 			Value:         0,
 			Possibilities: sudok.PossibleValues,
@@ -39,7 +33,7 @@ func rootSimple(sudok sudoku.Sudoku) Candidate {
 		if !ok {
 			continue
 		}
-		m[fvc.Coordinate] = coordinateState{
+		m[fvc.Coordinate] = cellState{
 			HasValue:      true,
 			Value:         fvc.Value,
 			Possibilities: nil,
@@ -52,11 +46,11 @@ func rootSimple(sudok sudoku.Sudoku) Candidate {
 		if !ok {
 			continue
 		}
-		fixedValues := make(map[int]struct{})
+		fixedValues := make([]int, 0)
 		for _, coor := range nrc.ConstrainedCoordinates() {
 			coorState := m[coor]
 			if coorState.HasValue {
-				fixedValues[coorState.Value] = struct{}{}
+				fixedValues = append(fixedValues, coorState.Value)
 			}
 		}
 		if len(fixedValues) == 0 {
@@ -65,16 +59,8 @@ func rootSimple(sudok sudoku.Sudoku) Candidate {
 		}
 		for _, coor := range nrc.ConstrainedCoordinates() {
 			coorState := m[coor]
-			if !coorState.HasValue {
-				newPossibilities := make([]int, 0, len(coorState.Possibilities))
-				for _, value := range coorState.Possibilities {
-					if _, ok := fixedValues[value]; !ok {
-						newPossibilities = append(newPossibilities, value)
-					}
-				}
-				coorState.Possibilities = newPossibilities
-				m[coor] = coorState
-			}
+			coorState.RemovePossibilities(fixedValues...)
+			m[coor] = coorState
 		}
 	}
 
@@ -100,13 +86,13 @@ func (c *simpleCandidate) NextCandidates() []Candidate {
 		return nil
 	}
 	coord := c.coordinateOrder[c.coordinateIndex]
-	coordState, ok := c.state[coord]
+	cell, ok := c.state[coord]
 	if !ok {
 		// this should never happen
 		// TODO: use slog here
 		panic(fmt.Sprintf("coordinate %v not found in state", coord))
 	}
-	if coordState.HasValue {
+	if cell.HasValue {
 		// this coordinate is fixed, so we don't need to try any values
 		return []Candidate{&simpleCandidate{
 			sudok:           c.sudok,
@@ -115,12 +101,12 @@ func (c *simpleCandidate) NextCandidates() []Candidate {
 			state:           c.state,
 		}}
 	}
-	currentPossibilities := coordState.Possibilities
+	currentPossibilities := cell.Possibilities
 	nextCandidates := make([]Candidate, 0, len(currentPossibilities))
 	for _, value := range currentPossibilities {
 		// try to fill in the coordinate with the value
 		newState := maps.Clone(c.state)
-		newState[coord] = coordinateState{
+		newState[coord] = cellState{
 			HasValue:      true,
 			Value:         value,
 			Possibilities: nil,

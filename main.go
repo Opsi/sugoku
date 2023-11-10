@@ -56,7 +56,7 @@ func run() error {
 
 	// solve the sudoku
 	start := time.Now()
-	solutions := backtrack.FindSolutions(ctx, backtrack.ModeSimple, *sudok)
+	solutions := backtrack.FindSolutions(ctx, backtrack.ModePencilMark, *sudok)
 	ticker := time.NewTicker(30 * time.Second)
 	solutionCount := 0
 
