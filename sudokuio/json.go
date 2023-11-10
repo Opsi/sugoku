@@ -20,7 +20,7 @@ func (s rawJsonSudoku) generate() (*sudoku.Sudoku, error) {
 		return nil, fmt.Errorf("generate field: %w", err)
 	}
 	for _, constraintGen := range s.Constraints {
-		constraints, err := constraintGen(sudok)
+		constraints, err := constraintGen(*sudok)
 		if err != nil {
 			return nil, fmt.Errorf("generate constraints: %w", err)
 		}
@@ -30,7 +30,7 @@ func (s rawJsonSudoku) generate() (*sudoku.Sudoku, error) {
 
 		sudok.Constraints = append(sudok.Constraints, constraints...)
 	}
-	return &sudok, nil
+	return sudok, nil
 }
 
 func ParseJSON(bytes []byte) (*sudoku.Sudoku, error) {
