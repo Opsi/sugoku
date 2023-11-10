@@ -1,8 +1,9 @@
-package solve_test
+package backtrack_test
 
 import (
+	"context"
+	"sudoku-solver/backtrack"
 	"sudoku-solver/constraint"
-	"sudoku-solver/solve"
 	"sudoku-solver/sudoku"
 	"sudoku-solver/sudokuio"
 	"testing"
@@ -63,7 +64,9 @@ func createSimpleSudoku(t require.TestingT) (sudoku.Sudoku, sudoku.Solution) {
 
 func TestSolveSimple(t *testing.T) {
 	sudok, solution := createSimpleSudoku(t)
-	solved, err := solve.Solve(sudok)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	solved, err := backtrack.FindSolution(ctx, backtrack.ModeSimple, sudok)
 	require.NoError(t, err)
 	require.NoError(t, sudok.Check(solved))
 	for _, coord := range sudok.Coordinates {
@@ -77,8 +80,10 @@ func TestSolveSimple(t *testing.T) {
 
 func BenchmarkSolveSimple(b *testing.B) {
 	sudok, _ := createSimpleSudoku(b)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	for i := 0; i < b.N; i++ {
-		_, err := solve.Solve(sudok)
+		_, err := backtrack.FindSolution(ctx, backtrack.ModeSimple, sudok)
 		require.NoError(b, err)
 	}
 }
@@ -137,7 +142,9 @@ func createArrowSudoku(t require.TestingT) (sudoku.Sudoku, sudoku.Solution) {
 
 func TestSolveArrowSudoku(t *testing.T) {
 	sudok, solution := createArrowSudoku(t)
-	solved, err := solve.Solve(sudok)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	solved, err := backtrack.FindSolution(ctx, backtrack.ModeSimple, sudok)
 	require.NoError(t, err)
 	require.NoError(t, sudok.Check(solved))
 	for _, coord := range sudok.Coordinates {
@@ -151,8 +158,10 @@ func TestSolveArrowSudoku(t *testing.T) {
 
 func BenchmarkSolveArrowSudoku(b *testing.B) {
 	sudok, _ := createArrowSudoku(b)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	for i := 0; i < b.N; i++ {
-		_, err := solve.Solve(sudok)
+		_, err := backtrack.FindSolution(ctx, backtrack.ModeSimple, sudok)
 		require.NoError(b, err)
 	}
 }
