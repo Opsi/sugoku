@@ -36,6 +36,29 @@ func (c *pencilmarkCandidate) FillIn(coordinate sudoku.Coordinate, value int) er
 		default:
 		}
 	}
+	// Since there was no error after the fill in let's check if we can fill in any
+	// other values because of this fill in.
+	for coord, state := range c.cellsState {
+		if state.HasValue {
+			continue
+		}
+		if len(state.Possibilities) == 0 {
+			// we can't fill in any values anymore, so this candidate is not solvable
+			// this should never happen
+			panic(fmt.Sprintf("coordinate %v has no possibilities left", coord))
+		}
+		if len(state.Possibilities) > 1 {
+			// we can't fill in any values yet
+			continue
+		}
+		// we can fill in this value
+		err := c.FillIn(coord, state.Possibilities[0])
+		if err != nil {
+			return fmt.Errorf("fill in %d at %v: %w", state.Possibilities[0], coord, err)
+		}
+		return nil
+	}
+	// we can't fill in any other values, so we are done
 	return nil
 }
 
