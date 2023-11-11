@@ -11,27 +11,29 @@ func TestRemovePossibilities(t *testing.T) {
 	t.Run("PossibilitesCantGetBigger", func(t *testing.T) {
 		rapid.Check(t, func(t *rapid.T) {
 			possibilites := rapid.SliceOf(rapid.Int()).Draw(t, "possibilities")
-			cs := &cellState{Possibilities: possibilites}
+			ori := VariableCellState(possibilites)
 			removed := rapid.SliceOf(rapid.Int()).Draw(t, "removed")
-			cs.RemovePossibilities(removed...)
-			assert.True(t, len(cs.Possibilities) <= len(possibilites))
+			updated, _ := ori.WithRemovedPossibilities(removed...)
+			assert.True(t, len(updated.Possibilities) <= len(ori.Possibilities))
 		})
 	})
 
 	t.Run("HasValueReturnsTrue", func(t *testing.T) {
 		rapid.Check(t, func(t *rapid.T) {
 			value := rapid.Int().Draw(t, "value")
-			cs := &cellState{HasValue: true, Value: value}
+			cs := FixedCellState(value)
 			removed := rapid.SliceOf(rapid.Int()).Draw(t, "removed")
-			assert.True(t, cs.RemovePossibilities(removed...))
+			_, ok := cs.WithRemovedPossibilities(removed...)
+			assert.True(t, ok)
 		})
 	})
 
 	t.Run("RemoveTheLastValueReturnsFalse", func(t *testing.T) {
 		rapid.Check(t, func(t *rapid.T) {
 			value := rapid.Int().Draw(t, "value")
-			cs := &cellState{Possibilities: []int{value}}
-			assert.False(t, cs.RemovePossibilities(value))
+			cs := VariableCellState([]int{value})
+			_, ok := cs.WithRemovedPossibilities(value)
+			assert.False(t, ok)
 		})
 	})
 }

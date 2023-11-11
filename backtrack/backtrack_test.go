@@ -192,10 +192,15 @@ func benchmarkSolveArrowSudoku(b *testing.B, mode backtrack.Mode) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	b.Run(mode.String(), func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			_, err := backtrack.FindSolution(ctx, mode, sudok)
-			require.NoError(b, err)
-		}
+		b.RunParallel(func(pb *testing.PB) {
+			for {
+				if !pb.Next() {
+					return
+				}
+				_, err := backtrack.FindSolution(ctx, mode, sudok)
+				require.NoError(b, err)
+			}
+		})
 	})
 }
 

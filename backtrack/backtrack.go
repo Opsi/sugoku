@@ -7,22 +7,28 @@ import (
 )
 
 type Candidate interface {
-	IsBroken() bool
-	IsSolved() bool
+	sudoku.Solution
 	NextCandidates() []Candidate
-	Get(coordinate sudoku.Coordinate) (int, bool)
+}
+
+type backtracker struct {
+	sudok     sudoku.Sudoku
+	solutions chan sudoku.Solution
 }
 
 // FindSolutions returns a channel that will be closed when all solutions have been found
 // or when the context is cancelled.
 func FindSolutions(ctx context.Context, mode Mode, sudok sudoku.Sudoku) <-chan sudoku.Solution {
 	root := mode.RootCandidate(sudok)
-	solutions := make(chan sudoku.Solution, 1)
+	b := &backtracker{
+		sudok:     sudok,
+		solutions: make(chan sudoku.Solution, 1),
+	}
 	go func() {
-		defer close(solutions)
-		backtrack(ctx, solutions, root)
+		defer close(b.solutions)
+		b.backtrack(ctx, root)
 	}()
-	return solutions
+	return b.solutions
 }
 
 // FindSolution returns the first solution found or an error if no solution was found or
@@ -42,21 +48,21 @@ func FindSolution(ctx context.Context, mode Mode, sudok sudoku.Sudoku) (sudoku.S
 	}
 }
 
-func backtrack(ctx context.Context, solutions chan<- sudoku.Solution, candidate Candidate) {
+func (b *backtracker) backtrack(ctx context.Context, candidate Candidate) {
 	if ctx.Err() != nil {
 		return
 	}
-	if candidate.IsBroken() {
+	if b.sudok.IsViolated(candidate) {
 		return
 	}
-	if candidate.IsSolved() {
+	if b.sudok.IsSolved(candidate) {
 		select {
 		case <-ctx.Done():
-		case solutions <- candidate:
+		case b.solutions <- candidate:
 		}
 		return
 	}
 	for _, nextCandidate := range candidate.NextCandidates() {
-		backtrack(ctx, solutions, nextCandidate)
+		b.backtrack(ctx, nextCandidate)
 	}
 }

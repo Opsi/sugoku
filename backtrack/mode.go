@@ -39,7 +39,12 @@ func (m Mode) String() string {
 func (m Mode) RootCandidate(sudok sudoku.Sudoku) Candidate {
 	switch m {
 	case ModeSimple:
-		return rootSimple(sudok)
+		root, err := rootSimple(sudok)
+		if err != nil {
+			// TODO: better error handling
+			panic(err)
+		}
+		return root
 	case ModePencilMark:
 		root, err := rootPencilMark(sudok)
 		if err != nil {
